@@ -3,12 +3,12 @@
 
 #A Python v2.7 implementation to encrypt and decrypt Cisco Type 7 passwords.
 
-#Ian Neill (c)2014.
+#Ian Neill (c)2014 - 2015
 
 import random
 
-VERSION = "v1.0.1"
-BUILDDATE = "06/07/2014"
+VERSION = "v1.0.2"
+BUILDDATE = "10/10/2015"
 
 #Cisco XOR key.
 #The encryption/decryption key used by Cisco was sourced from the Internet.
@@ -29,13 +29,13 @@ KEY_HEX = (0x64,0x73,0x66,0x64,0x3B,0x6B,0x66,0x6F,0x41,0x2C,
 #
 # Taken from: http://www.cisco.com/en/US/docs/ios/preface/usingios.html
 
-#Main Function.
+#Main Function
 def main():
     welcome("Py-CiscoT7 - A Cisco Type 7 Password Encryptor/Decryptor")
     menuMin = 1
     menuMax = 2
     menuQuit = 0
-    while 1:
+    while True:
         showMenu(menuMin, menuMax, menuQuit) #Show the menu.
         userChoice = getInteger(0, 0, "Enter choice [%d--%d or %d]: " % (menuMin, menuMax, menuQuit), False)
         #Take action as per selected menu-option.
@@ -58,13 +58,15 @@ def main():
         else:
             print("Error: \"%d\" is not a valid choice!" % userChoice)
     print("\nGoodbye.\n")
+    return
 
-#Welcome message.
+#Welcome message
 def welcome(message):
     print(message)
     print("   Version, %s, %s" % (VERSION, BUILDDATE))
+    return
 
-#Print the available menu options.
+#Print the Available Menu Options
 def showMenu(min, max, quit):
     print("\n" + 30 * '-')
     print "      P y - C I S C O T 7"
@@ -93,10 +95,11 @@ def showMenu(min, max, quit):
             continue
     print("\n %d. Exit program\n" % quit)
     print(30 * '-')
+    return
 
-#Get a number from the User.
+#Get a Number From the User
 def getInteger(min, max, message, checkRange = True):
-    while 1:
+    while True:
         inputValue = getValue(message)
         try:
             intValue = int(inputValue)
@@ -106,18 +109,20 @@ def getInteger(min, max, message, checkRange = True):
         if (intValue < min or intValue > max) and checkRange:
             print("Error: \"%d\" is outside range [%d--%d]!" % (intValue, min, max))
             continue
-        return intValue
+        break #Leave the while loop.
+    return intValue
 
-#Get something from the User.
+#Get Something From the User
 def getValue(message = "Enter choice: "):
-    while 1:
+    while True:
         inputValue = raw_input(message)
         if len(inputValue) == 0:
             print("Error: No value given!")
             continue
-        return inputValue
+        break #Leave the while loop.
+    return inputValue
 
-#Encrypt a string.
+#Encrypt a String
 def encryptT7(string):
     #A routine to encrypt a string as a Cisco Type 7 password.
     #I read the description of the algorithm and invented this...
@@ -154,7 +159,7 @@ def encryptT7(string):
     #Return the status and either the encrypted password, or an error message.
     return(ok, encrypted)
 
-#Decrypt a string.
+#Decrypt a String
 def decryptT7(string):
     #A routine to decrypt a string as a Cisco Type 7 password.
     #I read the description of the algorithm and invented this...
@@ -198,7 +203,7 @@ def decryptT7(string):
     #Return the the status and either the decrypted password, or an error message.
     return(ok, decrypted)
 
-#Run the program if it is the primary module.
+#Run the Program if it is the Primary Module
 if __name__ == '__main__':
     main()
 
