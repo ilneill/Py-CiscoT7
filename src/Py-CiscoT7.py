@@ -1,21 +1,16 @@
 #!/usr/bin/python
 #Filename: Py-CiscoT7.py
 
-#A Python implementation to encrypt and decrypt Cisco Type 7 passwords.
+#A Python v2.7 implementation to encrypt and decrypt Cisco Type 7 passwords.
 
-#Ian Neill (c)2014
-# - Works with Python v2.7
-
-#ToDo
-#1. Add an intuitive GUI.
+#Ian Neill (c)2014.
 
 import random
 
-#GLOBAL CONSTANTS
-VERSION = "v1.0.0"
-BUILDDATE = "15/06/2014"
+VERSION = "v1.0.1"
+BUILDDATE = "06/07/2014"
 
-#CISCO XOR KEY
+#Cisco XOR key.
 #The encryption/decryption key used by Cisco was sourced from the Internet.
 #Key text: 'dsfd;kfoA,.iyewrkldJKDHSUBsgvca69834ncxv9873254k;fg87'
 KEY_HEX = (0x64,0x73,0x66,0x64,0x3B,0x6B,0x66,0x6F,0x41,0x2C,
@@ -25,158 +20,105 @@ KEY_HEX = (0x64,0x73,0x66,0x64,0x3B,0x6B,0x66,0x6F,0x41,0x2C,
             0x39,0x38,0x37,0x33,0x32,0x35,0x34,0x6B,0x3B,0x66,
             0x67,0x38,0x37)
 
-#MAIN PROGRAM
+#Important note from Cisco about passwords
+#=========================================
+# Understanding Enable and Enable Secret Passwords...
+# Each type of password is case sensitive, can contain from 1 to 25 uppercase and lowercase alphanumeric characters, and can start with a numeral.
+# Spaces are also valid password characters; for example, "two words" is a valid password.
+# Leading spaces are ignored, but trailing spaces are recognized.
+#
+# Taken from: http://www.cisco.com/en/US/docs/ios/preface/usingios.html
+
+#Main Function.
 def main():
-    global wheel, pointer_l, pointer_n, code_start_l, code_start_n, increment, blocksize
     welcome("Py-CiscoT7 - A Cisco Type 7 Password Encryptor/Decryptor")
-    menu_min = 1
-    menu_max = 2
-    menu_quit = 0
-    prg_quit = False
-    while not prg_quit:
-        #Show the Menu.
-        show_menu(menu_min, menu_max, menu_quit)
-        #Get the User Choice.
-        user_choice = get_choice(menu_min, menu_max, menu_quit)
+    menuMin = 1
+    menuMax = 2
+    menuQuit = 0
+    while 1:
+        showMenu(menuMin, menuMax, menuQuit) #Show the menu.
+        userChoice = getInteger(0, 0, "Enter choice [%d--%d or %d]: " % (menuMin, menuMax, menuQuit), False)
         #Take action as per selected menu-option.
-        if user_choice == menu_quit:
-            prg_quit = True
-        elif user_choice == 1:
-            prg_choice1()
-        elif user_choice == 2:
-            prg_choice2()
-        elif user_choice == 3:
-            prg_choice3()
-        elif user_choice == 4:
-            prg_choice4()
-        elif user_choice == 5:
-            prg_choice5()
-        elif user_choice == 6:
-            prg_choice6()
-        elif user_choice == 7:
-            prg_choice7()
-        elif user_choice == 8:
-            prg_choice8()
-        elif user_choice == 9:
-            prg_choice9()
-    print "\nGoodbye.\n"
-    return
-    #End
+        if userChoice == menuQuit:
+            break #Leave the while loop.
+        elif userChoice == 1:
+            pwPlaintext = getValue("Enter Plaintext Password: ").lstrip()
+            (ok, pwEncrypted) = encryptT7(pwPlaintext)
+            if ok:
+                print("Encrypted Password: %s => %s" % (pwPlaintext, pwEncrypted))
+            else:
+                print("Whoops... %s" % pwEncrypted)
+        elif userChoice == 2:
+            pwEncrypted = getValue("Enter Encrypted Password: ")
+            (ok, pwPlaintext) = decryptT7(pwEncrypted)
+            if ok:
+                print("Plaintext Password: %s => %s" % (pwEncrypted, pwPlaintext))
+            else:
+                print("Whoops... %s" % pwPlaintext)
+        else:
+            print("Error: \"%d\" is not a valid choice!" % userChoice)
+    print("\nGoodbye.\n")
 
-#FUNCTIONS
-
-#Welcome Function
+#Welcome message.
 def welcome(message):
-    print message
-    print "   Version,", str(VERSION), "-", str(BUILDDATE)
-    print
-    return
+    print(message)
+    print("   Version, %s, %s" % (VERSION, BUILDDATE))
 
-#Show Menu
-def show_menu(min, max, quit):
-    print (30 * '-')
+#Print the available menu options.
+def showMenu(min, max, quit):
+    print("\n" + 30 * '-')
     print "      P y - C I S C O T 7"
     print "       M A I N - M E N U"
-    print (30 * '-')
-    print
-    if (min <= 1 <= max):
-        print " 1. Encrypt a Password"
-    if (min <= 2 <= max):
-        print " 2. Decrypt a Password"
-    if (min <= 3 <= max):
-        print " 3. Nothing Yet"
-    if (min <= 4 <= max):
-        print " 4. Nothing Yet"
-    if (min <= 5 <= max):
-        print " 5. Nothing Yet"
-    if (min <= 6 <= max):
-        print " 6. Nothing Yet"
-    if (min <= 7 <= max):
-        print " 7. Nothing Yet"
-    if (min <= 8 <= max):
-        print " 8. Nothing Yet"
-    if (min <= 9 <= max):
-        print " 9. Nothing Yet"
-    print
-    print " " + str(quit) + ". Exit program"
-    print
-    print (30 * '-')
-    return
+    print(30 * '-' + "\n")
+    for i in xrange(min, max+1):
+        if i == 1:
+            print(" 1. Encrypt a Password")
+        elif i == 2:
+            print(" 2. Decrypt a Password")
+        elif i == 3:
+            print(" 3. Nothing Yet")
+        elif i == 4:
+            print(" 4. Nothing Yet")
+        elif i == 5:
+            print(" 5. Nothing Yet")
+        elif i == 6:
+            print(" 6. Nothing Yet")
+        elif i == 7:
+            print(" 7. Nothing Yet")
+        elif i == 8:
+            print(" 8. Nothing Yet")
+        elif i == 9:
+            print(" 9. Nothing Yet")
+        else:
+            continue
+    print("\n %d. Exit program\n" % quit)
+    print(30 * '-')
 
-#Get User Choice
-def get_choice(min, max, quit):
-    #Wait for valid choice in while...not.
-    choice_is_valid=False
-    while not choice_is_valid:
+#Get a number from the User.
+def getInteger(min, max, message, checkRange = True):
+    while 1:
+        inputValue = getValue(message)
         try:
-            choice = int(raw_input("Enter choice [" + str(min) + "-" + str(max) + " or " + str(quit) + "]: "))
-            if (min <= choice <= max or choice == quit):
-                #A valid choice will terminate the while...not loop.
-                choice_is_valid = True
-            else:
-                print"Error! Only numbers " + str(min) + "-" + str(max) + " or " + str(quit) + " are valid."
-        except ValueError as e:
-            print ("Error! %s is not a valid choice." % e.args[0].split(": ")[1])
-    return(choice)
+            intValue = int(inputValue)
+        except ValueError:
+            print("Error: \"%s\" is not an integer!" % inputValue)
+            continue
+        if (intValue < min or intValue > max) and checkRange:
+            print("Error: \"%d\" is outside range [%d--%d]!" % (intValue, min, max))
+            continue
+        return intValue
 
-#Option 1
-def prg_choice1():
-    #Assume all ok, unless the password encrypt fails.
-    ok = True
-    print
-    pw_plaintext = raw_input("Enter Plaintext Password: ")
-    (ok, pw_encrypted) = encrypt_t7(pw_plaintext)
-    if ok:
-        print "Encrypted Password:", pw_plaintext, "=>", pw_encrypted
-    else:
-        print "Whoops...", pw_encrypted
-    print
-    return
+#Get something from the User.
+def getValue(message = "Enter choice: "):
+    while 1:
+        inputValue = raw_input(message)
+        if len(inputValue) == 0:
+            print("Error: No value given!")
+            continue
+        return inputValue
 
-#Option 2
-def prg_choice2():
-    #Assume all ok, unless the password decrypt fails.
-    ok = True
-    print
-    pw_encrypted = raw_input("Enter Encrypted Password: ")
-    (ok, pw_plaintext) = decrypt_t7(pw_encrypted)
-    if ok:
-        print "Plaintext Password:", pw_encrypted, "=>", pw_plaintext
-    else:
-        print "Whoops...", pw_plaintext
-    print
-    return
-
-#Option 3
-def prg_choice3():
-    return
-
-#Option 4
-def prg_choice4():
-    return
-
-#Option 5
-def prg_choice5():
-    return
-
-#Option 6
-def prg_choice6():
-    return
-
-#Option 7
-def prg_choice7():
-    return
-
-#Option 8
-def prg_choice8():
-    return
-
-#Option 9
-def prg_choice9():
-    return
-
-#Encrypt a string
-def encrypt_t7(string):
+#Encrypt a string.
+def encryptT7(string):
     #A routine to encrypt a string as a Cisco Type 7 password.
     #I read the description of the algorithm and invented this...
     #
@@ -212,8 +154,8 @@ def encrypt_t7(string):
     #Return the status and either the encrypted password, or an error message.
     return(ok, encrypted)
 
-#Decrypt a string
-def decrypt_t7(string):
+#Decrypt a string.
+def decryptT7(string):
     #A routine to decrypt a string as a Cisco Type 7 password.
     #I read the description of the algorithm and invented this...
     #
@@ -256,7 +198,7 @@ def decrypt_t7(string):
     #Return the the status and either the decrypted password, or an error message.
     return(ok, decrypted)
 
-#Run the program if it is the primary module
+#Run the program if it is the primary module.
 if __name__ == '__main__':
     main()
 
